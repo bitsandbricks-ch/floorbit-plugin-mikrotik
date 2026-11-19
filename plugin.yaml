@@ -1,21 +1,20 @@
-# The manifest. Floorbit reads it before it runs any code: what the plugin may touch (uses), its
-# settings, and what the agent part may send. Field by field: Floorbit's docs/plugins.md.
-id: example                    # rename: lowercase letters, digits, dashes; the repo is floorbit-plugin-<id>
-name: Example reachability
-icon: network
-version: "0.1.0"
+# Switch status, ports and which port a player is on, from MikroTik switches and routers through
+# the RouterOS v7 REST API. Off until turned on under Settings > Plugins. It only reads.
+id: mikrotik
+name: MikroTik
+icon: router
+version: "1.0.0"
 floorbit: ">=0.1,<2"
-description: "The local agent checks that a few services in the hall answer on their TCP port and the dashboard shows how many do."
+description: "Live status, ports and traffic of MikroTik switches (RouterOS 7 REST API), and which switch port an IP or MAC is on (ARP, then the bridge host tables). Feeds the floor plan, the status monitor, the seat inspector and the check-in page. Only reads: use an account in a read-only group."
 author: Floorbit
-homepage: https://github.com/bitsandbricks-ch/floorbit-plugin-template
-uses: [agent, settings, widgets, storage]
+homepage: https://mikrotik.com
+uses: [settings, http, monitoring]
 settings:
-  - {key: targets, label: Services, type: text, placeholder: "dns = 192.0.2.53:53\ncache = 192.0.2.80:80",
-     help: "One per line: a name = address:port. The agent tries to open a TCP connection to each."}
-  - {key: interval, label: Seconds between checks, type: int, default: 30, min: 5, max: 600}
-widgets:
-  - {id: summary, label: Services up, size: small, refresh: 30}
-agent:
-  sends:
-    # aggregate: counts only. Floorbit and the agent both refuse a payload with an address in it.
-    status: {privacy: aggregate, latest: true}
+  - {key: switches, label: Switches, type: list,
+     help: "Comma-separated, each as Name=URL, for example sw-a-01=https://192.0.2.21. The name must match the floor plan. Add the router too, so IPs can be found in its ARP table.",
+     placeholder: "sw-a-01=https://192.0.2.21"}
+  - {key: username, label: Username, type: string, help: "An account in a group with read and api (or rest-api) rights only."}
+  - {key: password, label: Password, type: secret}
+  - {key: timeout, label: Timeout, type: int, default: 4, min: 1, max: 20, help: "Seconds to wait for each device."}
+  - {key: verify_ssl, label: Verify TLS certificates, type: bool, default: true,
+     help: "RouterOS's www-ssl service needs a certificate. Turn this off only for self-signed ones on a network you trust."}
